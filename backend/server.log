@@ -1,0 +1,14 @@
+nohup: no se tendrá en cuenta la entrada
+127.0.0.1 - - [11/Oct/2025 17:09:11] "GET /health HTTP/1.1" 200 -
+127.0.0.1 - - [11/Oct/2025 17:09:25] "GET /api/v1/rewards/leaderboard HTTP/1.1" 200 -
+127.0.0.1 - - [11/Oct/2025 17:10:18] "GET /api/v1/scores/empresa_verde_1 HTTP/1.1" 200 -
+127.0.0.1 - - [11/Oct/2025 17:10:45] "POST /api/v1/datacoins/upload HTTP/1.1" 200 -
+127.0.0.1 - - [11/Oct/2025 17:11:05] "GET /?id=d381f32b-3451-421f-9038-7f212f153efc&vscodeBrowserReqId=1760220665089 HTTP/1.1" 200 -
+127.0.0.1 - - [11/Oct/2025 17:11:11] "GET /health HTTP/1.1" 200 -
+127.0.0.1 - - [11/Oct/2025 17:14:32] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [11/Oct/2025 17:14:34] "GET /favicon.ico HTTP/1.1" 404 -
+127.0.0.1 - - [11/Oct/2025 17:14:47] "GET /health HTTP/1.1" 200 -
+127.0.0.1 - - [11/Oct/2025 17:15:04] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [11/Oct/2025 17:15:06] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [11/Oct/2025 17:15:07] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [11/Oct/2025 17:15:11] "GET / HTTP/1.1" 200 -
