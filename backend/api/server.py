@@ -21,7 +21,7 @@ from services.lighthouse_service import LighthouseService
 from services.reward_service import RewardService
 from services.notification_service import NotificationService
 from services.evvm_relayer import EVVMRelayer
-from api.routes import datacoins, rewards, scores
+from api.routes import datacoins, rewards, scores, wallet
 
 # Cargar variables de entorno
 load_dotenv()
@@ -58,6 +58,7 @@ evvm_relayer = EVVMRelayer()
 app.include_router(datacoins.router, prefix="/api/v1/datacoins", tags=["DataCoins"])
 app.include_router(rewards.router, prefix="/api/v1/rewards", tags=["Rewards"])
 app.include_router(scores.router, prefix="/api/v1/scores", tags=["Scores"])
+app.include_router(wallet.router, prefix="/api/v1/wallet", tags=["Wallet"])
 
 @app.get("/", response_class=HTMLResponse)
 async def root():
