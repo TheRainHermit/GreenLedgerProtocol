@@ -5,12 +5,25 @@
 import React from "react";
 
 const Leaderboard: React.FC = () => {
+  // Simulación de datos
+  const leaders = [
+    { name: "EcoCorp", score: 95 },
+    { name: "GreenTech", score: 90 },
+    { name: "PlanetSave", score: 88 },
+  ];
+
   return (
-    <section>
-      <h2>Company Leaderboard</h2>
-      {/* TODO: Integrate with backend API */}
-      <p>Real-time ranking of sustainable companies.</p>
-    </section>
+    <div className="bg-white rounded-xl shadow p-6">
+      <h2 className="text-lg font-semibold text-green-700 mb-2">Leaderboard</h2>
+      <ol className="space-y-2">
+        {leaders.map((l, i) => (
+          <li key={i} className="flex justify-between items-center">
+            <span className="font-medium">{i + 1}. {l.name}</span>
+            <span className="text-green-600 font-bold">{l.score}</span>
+          </li>
+        ))}
+      </ol>
+    </div>
   );
 };
 
