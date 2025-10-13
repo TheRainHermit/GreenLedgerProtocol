@@ -1,30 +1,13 @@
 import React, { useState } from "react";
 import { ethers } from "ethers";
+import { useUser } from "../context/UserContext";
 
 export default function Login({ onLogin }: { onLogin?: () => void }) {
-  const [email, setEmail] = useState("");
+  const { setUser } = useUser();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const handleEmailLogin = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
-    setError(null);
-    setTimeout(() => {
-      setLoading(false);
-      onLogin && onLogin();
-    }, 1000);
-  };
-
-  const handleGmailLogin = () => {
-    setLoading(true);
-    setError(null);
-    setTimeout(() => {
-      setLoading(false);
-      onLogin && onLogin();
-    }, 1000);
-  };
-
+  // Login real con wallet
   const handleWalletLogin = async () => {
     setLoading(true);
     setError(null);
@@ -33,53 +16,47 @@ export default function Login({ onLogin }: { onLogin?: () => void }) {
       const provider = new ethers.BrowserProvider(window.ethereum);
       await provider.send("eth_requestAccounts", []);
       const signer = await provider.getSigner();
-      await signer.getAddress();
-      setLoading(false);
-      onLogin && onLogin();
+      const address = await signer.getAddress();
+
+      // 1. Obtener mensaje a firmar del backend
+      const msgRes = await fetch("http://localhost:8000/api/v1/wallet/signature-message");
+      const { message } = await msgRes.json();
+
+      // 2. Firmar el mensaje
+      const signature = await signer.signMessage(message);
+
+      // 3. Enviar datos al backend para login/asociación
+      const res = await fetch("http://localhost:8000/api/v1/wallet/connect", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          user_id: address, // O companyId si tu backend lo requiere
+          address,
+          message,
+          signature,
+        }),
+      });
+      const data = await res.json();
+      if (data.status === "success") {
+        setUser({
+          name: "Usuario Wallet",
+          companyId: address, // O el companyId real si lo devuelve el backend
+          walletAddress: address,
+        });
+        onLogin && onLogin();
+      } else {
+        setError(data.message || "Error al conectar la wallet");
+      }
     } catch (err: any) {
-      setLoading(false);
       setError(err.message || "Error al conectar la wallet");
     }
+    setLoading(false);
   };
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50">
       <div className="w-full max-w-md p-8 bg-white rounded-xl shadow-lg space-y-6">
         <h2 className="text-2xl font-bold text-center text-green-700 mb-4">Iniciar Sesión</h2>
-        <form onSubmit={handleEmailLogin} className="space-y-4">
-          <input
-            type="email"
-            placeholder="Correo electrónico"
-            className="w-full px-4 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-green-400"
-            value={email}
-            onChange={e => setEmail(e.target.value)}
-            required
-          />
-          <button
-            type="submit"
-            className="w-full bg-green-600 text-white py-2 rounded hover:bg-green-700 transition"
-            disabled={loading}
-          >
-            {loading ? "Procesando..." : "Entrar con correo"}
-          </button>
-        </form>
-        <div className="flex items-center my-2">
-          <div className="flex-grow border-t border-gray-200"></div>
-          <span className="mx-2 text-gray-400">o</span>
-          <div className="flex-grow border-t border-gray-200"></div>
-        </div>
-        <button
-          onClick={handleGmailLogin}
-          className="w-full flex items-center justify-center bg-white border border-gray-300 py-2 rounded hover:bg-gray-50 transition"
-          disabled={loading}
-        >
-          <img
-            src="https://www.svgrepo.com/show/475656/google-color.svg"
-            alt="Gmail"
-            className="w-5 h-5 mr-2"
-          />
-          {loading ? "Procesando..." : "Entrar con Gmail"}
-        </button>
         <button
           onClick={handleWalletLogin}
           className="w-full flex items-center justify-center bg-gray-900 text-white py-2 rounded hover:bg-gray-800 transition"

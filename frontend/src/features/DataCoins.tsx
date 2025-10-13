@@ -2,49 +2,77 @@
  * DataCoins Feature
  * Muestra métricas ambientales tokenizadas y verificadas.
  */
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
+import { useUser } from "../context/UserContext";
 
-const DataCoins: React.FC = () => {
-  // Simulación de balance y transacciones
-  const [balance, setBalance] = useState(1200);
-  const transactions = [
-    { id: 1, type: "Recibido", amount: 200, date: "2025-10-10" },
-    { id: 2, type: "Gastado", amount: -50, date: "2025-10-09" },
-    { id: 3, type: "Recibido", amount: 100, date: "2025-10-07" },
-  ];
-
-  return (
-    <section className="card flex flex-col space-y-4">
-      <h2 className="text-xl font-semibold text-green-700">DataCoins</h2>
-      <div className="flex items-center space-x-3">
-        <span className="text-3xl font-bold text-green-600">{balance}</span>
-        <span className="text-gray-500">DC</span>
-      </div>
-      <div>
-        <h3 className="text-lg font-semibold text-gray-700 mb-2">Movimientos recientes</h3>
-        <ul className="divide-y divide-gray-200">
-          {transactions.map(tx => (
-            <li key={tx.id} className="flex justify-between py-2 text-sm">
-              <span>
-                {tx.type}{" "}
-                <span className={tx.amount > 0 ? "text-green-600" : "text-red-500"}>
-                  {tx.amount > 0 ? "+" : ""}
-                  {tx.amount} DC
-                </span>
-              </span>
-              <span className="text-gray-400">{tx.date}</span>
-            </li>
-          ))}
-        </ul>
-      </div>
-      <button
-        className="mt-2 px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 transition self-end"
-        onClick={() => setBalance(balance + 100)}
-      >
-        Simular ingreso +100 DC
-      </button>
-    </section>
-  );
+type DataCoin = {
+  metric_type: string;
+  value: number;
+  unit: string;
+  timestamp: string;
+  lighthouse_hash: string;
+  ipfs_url?: string;
 };
 
-export default DataCoins;
+export default function DataCoinsList() {
+  const { user } = useUser();
+  const [datacoins, setDatacoins] = useState<DataCoin[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (!user.companyId) return;
+    setLoading(true);
+    fetch(`http://localhost:8000/api/v1/datacoins/company/${user.companyId}`)
+      .then(res => res.json())
+      .then(data => {
+        if (data.success) setDatacoins(data.datacoins);
+        setLoading(false);
+      });
+  }, [user.companyId]);
+
+  return (
+    <div className="bg-white rounded shadow p-6 mb-6">
+      <h2 className="text-xl font-bold text-green-700 mb-2">Tus DataCoins</h2>
+      {loading ? (
+        <div className="text-gray-500">Cargando...</div>
+      ) : datacoins.length === 0 ? (
+        <div className="text-gray-500">No hay DataCoins registradas.</div>
+      ) : (
+        <div className="overflow-x-auto">
+          <table className="min-w-full text-sm">
+            <thead>
+              <tr>
+                <th className="px-2 py-1 text-left">Tipo</th>
+                <th className="px-2 py-1 text-left">Valor</th>
+                <th className="px-2 py-1 text-left">Unidad</th>
+                <th className="px-2 py-1 text-left">Fecha</th>
+                <th className="px-2 py-1 text-left">Hash</th>
+                <th className="px-2 py-1 text-left">IPFS</th>
+              </tr>
+            </thead>
+            <tbody>
+              {datacoins.map((dc, idx) => (
+                <tr key={idx} className="border-t">
+                  <td className="px-2 py-1">{dc.metric_type}</td>
+                  <td className="px-2 py-1">{dc.value}</td>
+                  <td className="px-2 py-1">{dc.unit}</td>
+                  <td className="px-2 py-1">{new Date(dc.timestamp).toLocaleString()}</td>
+                  <td className="px-2 py-1 break-all">{dc.lighthouse_hash}</td>
+                  <td className="px-2 py-1">
+                    {dc.ipfs_url ? (
+                      <a href={dc.ipfs_url} target="_blank" rel="noopener noreferrer" className="text-blue-600 underline">
+                        Ver
+                      </a>
+                    ) : (
+                      "-"
+                    )}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </div>
+  );
+}
