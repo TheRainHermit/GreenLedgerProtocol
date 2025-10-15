@@ -11,6 +11,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse
 from dotenv import load_dotenv
 import logging
+from contextlib import asynccontextmanager
 
 # Importar servicios y rutas
 import sys
@@ -30,13 +31,24 @@ load_dotenv()
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """Gestión del ciclo de vida de la aplicación"""
+    # Startup
+    logger.info("🌿 Iniciando GreenLedger Protocol API...")
+    logger.info(f"📝 Documentación disponible en: http://{os.getenv('API_HOST', 'localhost')}:{os.getenv('API_PORT', 8000)}/docs")
+    yield
+    # Shutdown
+    logger.info("🔄 Cerrando GreenLedger Protocol API...")
+
 # Crear aplicación FastAPI
 app = FastAPI(
     title="🌿 GreenLedger Protocol API",
     description="Sistema de scoring de sostenibilidad con recompensas automatizadas",
     version="1.0.0",
     docs_url="/docs",
-    redoc_url="/redoc"
+    redoc_url="/redoc",
+    lifespan=lifespan
 )
 
 # Configurar CORS
@@ -140,17 +152,6 @@ async def health_check():
     except Exception as e:
         logger.error(f"Health check failed: {e}")
         raise HTTPException(status_code=503, detail="Service unhealthy")
-
-@app.on_event("startup")
-async def startup_event():
-    """Inicialización al arrancar el servidor"""
-    logger.info("🌿 Iniciando GreenLedger Protocol API...")
-    logger.info(f"📝 Documentación disponible en: http://{os.getenv('API_HOST', 'localhost')}:{os.getenv('API_PORT', 8000)}/docs")
-
-@app.on_event("shutdown")
-async def shutdown_event():
-    """Limpieza al cerrar el servidor"""
-    logger.info("🔄 Cerrando GreenLedger Protocol API...")
 
 if __name__ == "__main__":
     # Configuración del servidor

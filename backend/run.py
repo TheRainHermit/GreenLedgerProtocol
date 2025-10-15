@@ -24,7 +24,7 @@ if __name__ == "__main__":
     print(f"📖 Documentación: http://{host}:{port}/docs")
     
     uvicorn.run(
-        app,
+        "api.server:app",
         host=host,
         port=port,
         reload=debug,
