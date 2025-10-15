@@ -1,0 +1,327 @@
+/* GreenLedger Protocol - Tema Ambiental Completo */
+
+:root {
+  /* Paleta de colores ambientales */
+  --forest-primary: #2d5a27;
+  --forest-secondary: #4a7c59;
+  --leaf-green: #6a994e;
+  --spring-green: #a7c957;
+  --mint-light: #bcf5bc;
+  --earth-brown: #6f4e37;
+  --sky-blue: #87ceeb;
+  --sunset-orange: #ff8c42;
+  --nature-white: #f7f9f7;
+  --deep-forest: #1a3d1a;
+  
+  /* Gradientes ambientales */
+  --gradient-forest: linear-gradient(135deg, var(--forest-primary) 0%, var(--leaf-green) 100%);
+  --gradient-nature: linear-gradient(135deg, var(--spring-green) 0%, var(--mint-light) 100%);
+  --gradient-earth: linear-gradient(135deg, var(--earth-brown) 0%, var(--sunset-orange) 100%);
+  --gradient-sky: linear-gradient(135deg, var(--sky-blue) 0%, var(--mint-light) 100%);
+  
+  /* Sombras naturales */
+  --shadow-leaf: 0 4px 12px rgba(106, 153, 78, 0.15);
+  --shadow-forest: 0 8px 24px rgba(45, 90, 39, 0.2);
+  --shadow-nature: 0 2px 8px rgba(188, 245, 188, 0.3);
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Segoe UI', 'Roboto', 'Inter', system-ui, sans-serif;
+  background: var(--gradient-nature);
+  background-attachment: fixed;
+  color: var(--deep-forest);
+  line-height: 1.6;
+  min-height: 100vh;
+}
+
+/* Layout principal */
+.nature-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+/* Cards con tema natural */
+.eco-card {
+  background: rgba(247, 249, 247, 0.95);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(188, 245, 188, 0.3);
+  border-radius: 16px;
+  padding: 24px;
+  margin: 16px 0;
+  box-shadow: var(--shadow-leaf);
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.eco-card:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-forest);
+  border-color: var(--spring-green);
+}
+
+.eco-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: var(--gradient-forest);
+}
+
+/* Botones con tema ambiental */
+.eco-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 12px 24px;
+  background: var(--gradient-forest);
+  color: white;
+  text-decoration: none;
+  border-radius: 12px;
+  border: none;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 16px;
+  transition: all 0.3s ease;
+  gap: 8px;
+  position: relative;
+  overflow: hidden;
+}
+
+.eco-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-forest);
+  background: var(--gradient-earth);
+}
+
+.eco-btn:active {
+  transform: translateY(0);
+}
+
+.eco-btn-secondary {
+  background: var(--gradient-nature);
+  color: var(--deep-forest);
+}
+
+.eco-btn-secondary:hover {
+  background: var(--gradient-sky);
+}
+
+/* Headers con tema natural */
+.nature-header {
+  text-align: center;
+  margin-bottom: 48px;
+  padding: 40px 20px;
+  background: rgba(247, 249, 247, 0.8);
+  backdrop-filter: blur(10px);
+  border-radius: 24px;
+  border: 1px solid rgba(188, 245, 188, 0.4);
+}
+
+.eco-title {
+  font-size: 3rem;
+  font-weight: 800;
+  background: var(--gradient-forest);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 16px;
+  text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.eco-subtitle {
+  font-size: 1.25rem;
+  color: var(--forest-secondary);
+  margin-bottom: 24px;
+  font-weight: 500;
+}
+
+/* Status indicators ambientales */
+.status-eco {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 20px;
+  border-radius: 12px;
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.status-connected {
+  background: var(--gradient-nature);
+  color: var(--deep-forest);
+  border: 1px solid var(--spring-green);
+}
+
+.status-error {
+  background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
+  color: #dc2626;
+  border: 1px solid #f87171;
+}
+
+.status-loading {
+  background: var(--gradient-sky);
+  color: var(--forest-primary);
+  border: 1px solid var(--sky-blue);
+}
+
+/* Grid system natural */
+.eco-grid {
+  display: grid;
+  gap: 24px;
+}
+
+.eco-grid-1 { grid-template-columns: 1fr; }
+.eco-grid-2 { grid-template-columns: repeat(2, 1fr); }
+.eco-grid-3 { grid-template-columns: repeat(3, 1fr); }
+
+/* Utilities con tema ambiental */
+.text-forest { color: var(--forest-primary); }
+.text-leaf { color: var(--leaf-green); }
+.text-spring { color: var(--spring-green); }
+.text-earth { color: var(--earth-brown); }
+.text-nature-light { color: var(--forest-secondary); }
+
+.bg-forest { background: var(--forest-primary); }
+.bg-leaf { background: var(--leaf-green); }
+.bg-nature { background: var(--nature-white); }
+
+.text-center { text-align: center; }
+.text-left { text-align: left; }
+.text-right { text-align: right; }
+
+.font-bold { font-weight: 700; }
+.font-semibold { font-weight: 600; }
+.font-medium { font-weight: 500; }
+
+/* Tamaños de texto */
+.text-xs { font-size: 0.75rem; }
+.text-sm { font-size: 0.875rem; }
+.text-base { font-size: 1rem; }
+.text-lg { font-size: 1.125rem; }
+.text-xl { font-size: 1.25rem; }
+.text-2xl { font-size: 1.5rem; }
+.text-3xl { font-size: 1.875rem; }
+.text-4xl { font-size: 2.25rem; }
+
+/* Espaciado ambiental */
+.mb-1 { margin-bottom: 0.25rem; }
+.mb-2 { margin-bottom: 0.5rem; }
+.mb-3 { margin-bottom: 0.75rem; }
+.mb-4 { margin-bottom: 1rem; }
+.mb-6 { margin-bottom: 1.5rem; }
+.mb-8 { margin-bottom: 2rem; }
+.mb-12 { margin-bottom: 3rem; }
+
+.mt-4 { margin-top: 1rem; }
+.mt-6 { margin-top: 1.5rem; }
+.mt-8 { margin-top: 2rem; }
+
+.p-2 { padding: 0.5rem; }
+.p-3 { padding: 0.75rem; }
+.p-4 { padding: 1rem; }
+.p-6 { padding: 1.5rem; }
+.p-8 { padding: 2rem; }
+
+.px-2 { padding-left: 0.5rem; padding-right: 0.5rem; }
+.px-3 { padding-left: 0.75rem; padding-right: 0.75rem; }
+.px-4 { padding-left: 1rem; padding-right: 1rem; }
+.px-6 { padding-left: 1.5rem; padding-right: 1.5rem; }
+
+.py-2 { padding-top: 0.5rem; padding-bottom: 0.5rem; }
+.py-3 { padding-top: 0.75rem; padding-bottom: 0.75rem; }
+.py-4 { padding-top: 1rem; padding-bottom: 1rem; }
+.py-6 { padding-top: 1.5rem; padding-bottom: 1.5rem; }
+
+/* Animaciones naturales */
+@keyframes leafGrow {
+  from { 
+    opacity: 0; 
+    transform: translateY(20px) scale(0.95); 
+  }
+  to { 
+    opacity: 1; 
+    transform: translateY(0) scale(1); 
+  }
+}
+
+@keyframes windSway {
+  0%, 100% { transform: translateX(0); }
+  50% { transform: translateX(3px); }
+}
+
+@keyframes pulseGreen {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
+}
+
+.animate-leaf-grow {
+  animation: leafGrow 0.6s ease-out;
+}
+
+.animate-wind-sway {
+  animation: windSway 3s ease-in-out infinite;
+}
+
+.animate-pulse-green {
+  animation: pulseGreen 2s ease-in-out infinite;
+}
+
+/* Indicadores de score ambientales */
+.eco-score-circle {
+  position: relative;
+  width: 120px;
+  height: 120px;
+  margin: 0 auto;
+}
+
+.eco-score-value {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 2rem;
+  font-weight: 800;
+  color: var(--leaf-green);
+  text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+/* Responsive design natural */
+@media (max-width: 768px) {
+  .eco-grid-2,
+  .eco-grid-3 {
+    grid-template-columns: 1fr;
+  }
+  
+  .eco-title {
+    font-size: 2rem;
+  }
+  
+  .nature-container {
+    padding: 16px;
+  }
+  
+  .eco-card {
+    padding: 20px;
+    margin: 12px 0;
+  }
+}
+
+@media (max-width: 480px) {
+  .eco-title {
+    font-size: 1.75rem;
+  }
+  
+  .eco-subtitle {
+    font-size: 1rem;
+  }
+}
