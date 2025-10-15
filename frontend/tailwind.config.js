@@ -5,9 +5,6 @@ module.exports = {
     "./src/components/**/*.{js,ts,jsx,tsx}",
   ],
   theme: {
-<<<<<<< HEAD
-    extend: {},
-=======
     extend: {
       colors: {
         'primary-green': '#10b981',
@@ -35,7 +32,6 @@ module.exports = {
         sans: ['Inter', 'system-ui', 'sans-serif'],
       },
     },
->>>>>>> 9c99c6f8cde22caeda3e70673f69e8eb04aa2fb6
   },
   plugins: [],
 }
