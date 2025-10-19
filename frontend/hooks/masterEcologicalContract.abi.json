@@ -1,0 +1,19 @@
+[
+  {"inputs":[{"internalType":"uint256","name":"_feePercent","type":"uint256"}],"stateMutability":"nonpayable","type":"constructor"},
+  {"inputs":[{"internalType":"bytes32","name":"serviceId","type":"bytes32"},{"internalType":"address","name":"serviceAddress","type":"address"}],"name":"registerService","outputs":[],"stateMutability":"nonpayable","type":"function"},
+  {"inputs":[{"internalType":"bytes32","name":"serviceId","type":"bytes32"}],"name":"unregisterService","outputs":[],"stateMutability":"nonpayable","type":"function"},
+  {"inputs":[{"internalType":"address","name":"token","type":"address"},{"internalType":"bool","name":"allowed","type":"bool"}],"name":"setAllowedERC20","outputs":[],"stateMutability":"nonpayable","type":"function"},
+  {"inputs":[{"internalType":"uint256","name":"_feePercent","type":"uint256"}],"name":"setFeePercent","outputs":[],"stateMutability":"nonpayable","type":"function"},
+  {"inputs":[{"internalType":"bytes32","name":"opId","type":"bytes32"},{"internalType":"string","name":"opType","type":"string"},{"internalType":"bytes","name":"data","type":"bytes"}],"name":"emitOffchainOperation","outputs":[],"stateMutability":"nonpayable","type":"function"},
+  {"inputs":[{"internalType":"bytes32","name":"serviceId","type":"bytes32"},{"internalType":"bytes","name":"data","type":"bytes"},{"internalType":"address","name":"seller","type":"address"},{"internalType":"bool","name":"useEscrow","type":"bool"}],"name":"buyWithETH","outputs":[],"stateMutability":"payable","type":"function"},
+  {"inputs":[{"internalType":"bytes32","name":"escrowId","type":"bytes32"}],"name":"releaseEscrow","outputs":[],"stateMutability":"nonpayable","type":"function"},
+  {"inputs":[{"internalType":"bytes32","name":"serviceId","type":"bytes32"},{"internalType":"address","name":"token","type":"address"},{"internalType":"uint256","name":"amount","type":"uint256"},{"internalType":"bytes","name":"data","type":"bytes"},{"internalType":"address","name":"seller","type":"address"},{"internalType":"bool","name":"useEscrow","type":"bool"}],"name":"buyWithERC20","outputs":[],"stateMutability":"nonpayable","type":"function"},
+  {"inputs":[{"internalType":"bytes32","name":"escrowId","type":"bytes32"}],"name":"releaseEscrowERC20","outputs":[],"stateMutability":"nonpayable","type":"function"},
+  {"inputs":[{"internalType":"address payable","name":"to","type":"address"}],"name":"withdrawETH","outputs":[],"stateMutability":"nonpayable","type":"function"},
+  {"inputs":[{"internalType":"address","name":"token","type":"address"},{"internalType":"address","name":"to","type":"address"}],"name":"withdrawERC20","outputs":[],"stateMutability":"nonpayable","type":"function"},
+  {"inputs":[],"name":"feePercent","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},
+  {"inputs":[],"name":"treasury","outputs":[{"internalType":"address payable","name":"","type":"address"}],"stateMutability":"view","type":"function"},
+  {"inputs":[{"internalType":"bytes32","name":"serviceId","type":"bytes32"}],"name":"services","outputs":[{"internalType":"address","name":"","type":"address"}],"stateMutability":"view","type":"function"},
+  {"inputs":[{"internalType":"address","name":"token","type":"address"}],"name":"allowedERC20","outputs":[{"internalType":"bool","name":"","type":"bool"}],"stateMutability":"view","type":"function"},
+  {"inputs":[{"internalType":"bytes32","name":"escrowId","type":"bytes32"}],"name":"escrows","outputs":[{"internalType":"address","name":"payer","type":"address"},{"internalType":"address","name":"seller","type":"address"},{"internalType":"address","name":"token","type":"address"},{"internalType":"uint256","name":"amount","type":"uint256"},{"internalType":"uint256","name":"fee","type":"uint256"},{"internalType":"bool","name":"released","type":"bool"}],"stateMutability":"view","type":"function"}
+]

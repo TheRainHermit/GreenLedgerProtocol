@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { MASTER_ECOLOGICAL_CONTRACT_ABI, MASTER_ECOLOGICAL_CONTRACT_ADDRESS } from '../hooks/useMasterEcologicalContract'
 
 export default function WalletConnector() {
   const [isConnected, setIsConnected] = useState(false)
@@ -11,9 +12,12 @@ export default function WalletConnector() {
     pyusd: '0.00'
   })
   const [isLoadingBalances, setIsLoadingBalances] = useState(false)
+  const [loadingTimeout, setLoadingTimeout] = useState(false)
   const [balanceHistory, setBalanceHistory] = useState([])
   const [showComparison, setShowComparison] = useState(false)
   const [tokenBalances, setTokenBalances] = useState([])
+  const [treasuryWallet, setTreasuryWallet] = useState('')
+  const [txStatus, setTxStatus] = useState('')
 
   // Lista de tokens ERC-20 populares (puedes agregar más)
   const ERC20_TOKENS = [
@@ -135,7 +139,8 @@ export default function WalletConnector() {
                 'latest'
               ]
             })
-            const balance = parseInt(balanceHex, 16) / Math.pow(10, token.decimals)
+            let balance = parseInt(balanceHex, 16) / Math.pow(10, token.decimals)
+            if (isNaN(balance) || !isFinite(balance)) balance = 0
             return { symbol: token.symbol, balance: balance.toFixed(4) }
           } catch (err) {
             return { symbol: token.symbol, balance: '0.0000' }
@@ -150,35 +155,33 @@ export default function WalletConnector() {
     }
   }
 
-  // Obtener saldos reales de la wallet
+  // Obtener saldos reales de la wallet con timeout/fallback visual
   const fetchBalances = async (address) => {
     setIsLoadingBalances(true)
+    setLoadingTimeout(false)
+    let timeoutId = setTimeout(() => {
+      setLoadingTimeout(true)
+    }, 7000)
     try {
       if (typeof window !== 'undefined' && window.ethereum) {
-        // Obtener balance de ETH
         const ethBalance = await window.ethereum.request({
           method: 'eth_getBalance',
           params: [address, 'latest']
         })
         const ethBalanceFormatted = (parseInt(ethBalance, 16) / Math.pow(10, 18)).toFixed(4)
-        // Obtener balances de tokens
-        await fetchTokenBalances(address)
-        // PYUSD (si está en la lista de tokens)
-        const pyusdToken = tokenBalances.find(t => t.symbol === 'PYUSD')
+        const tokens = await fetchTokenBalances(address)
+        const pyusdToken = tokens.find(t => t.symbol === 'PYUSD')
         setBalances({
           eth: ethBalanceFormatted,
           pyusd: pyusdToken ? pyusdToken.balance : '0.00'
         })
-
-        // Guardar en historial para comparación
         const newEntry = {
           timestamp: new Date().toISOString(),
           eth: ethBalanceFormatted,
           pyusd: pyusdToken ? pyusdToken.balance : '0.00'
         }
-        setBalanceHistory(prev => [newEntry, ...prev.slice(0, 4)]) // Mantener últimas 5 entradas
+        setBalanceHistory(prev => [newEntry, ...prev.slice(0, 4)])
       } else {
-        // Demo
         setBalances({ eth: '0.1234', pyusd: '156.80' })
         setTokenBalances([
           { symbol: 'PYUSD', balance: '156.80' },
@@ -191,18 +194,16 @@ export default function WalletConnector() {
           eth: '0.1234',
           pyusd: '156.80'
         }
-        setBalanceHistory(prev => [newEntry, ...prev.slice(0, 4)]) // Mantener últimas 5 entradas
+        setBalanceHistory(prev => [newEntry, ...prev.slice(0, 4)])
       }
     } catch (error) {
       console.error('Error obteniendo saldos:', error)
-      // Usar valores por defecto en caso de error
-      setBalances({
-        eth: '0.00',
-        pyusd: '0.00'
-      })
+      setBalances({ eth: '0.00', pyusd: '0.00' })
       setTokenBalances([])
     }
+    clearTimeout(timeoutId)
     setIsLoadingBalances(false)
+    setLoadingTimeout(false)
   }
 
   const connectWallet = async () => {
@@ -243,200 +244,198 @@ export default function WalletConnector() {
     })
   }
 
+  // Acción demo para "Comprar Servicio Demo"
+  const handleBuyService = async () => {
+    if (!isConnected || !walletAddress) {
+      alert('Por favor conecta la wallet primero.')
+      return
+    }
+    setTxStatus('Iniciando transacción demo...')
+    try {
+      if (typeof window !== 'undefined' && window.ethereum) {
+        // Enviamos una transacción demo de valor 0 al contrato maestro (no realiza cambios si el contrato lo evita)
+        const params = [{
+          from: walletAddress,
+          to: MASTER_ECOLOGICAL_CONTRACT_ADDRESS,
+          value: '0x0'
+        }]
+        const txHash = await window.ethereum.request({
+          method: 'eth_sendTransaction',
+          params
+        })
+        setTxStatus(`Tx enviada: ${txHash}`)
+      } else {
+        alert('Proveedor Web3 no disponible.')
+        setTxStatus('No hay proveedor Web3')
+      }
+    } catch (err) {
+      console.error('Error enviando tx demo:', err)
+      if (err && err.code === 4001) {
+        setTxStatus('Transacción rechazada por el usuario')
+      } else {
+        setTxStatus('Error al enviar la transacción')
+      }
+    }
+  }
+
+  // Obtener la dirección de la wallet de comisiones del contrato
+  useEffect(() => {
+    if (typeof window !== 'undefined' && window.ethereum) {
+      const getTreasury = async () => {
+        try {
+          const provider = window.ethereum
+          let ethers
+          try { ethers = await import('ethers') } catch {}
+          if (ethers) {
+            const providerEthers = new ethers.BrowserProvider(provider)
+            const contract = new ethers.Contract(
+              MASTER_ECOLOGICAL_CONTRACT_ADDRESS,
+              MASTER_ECOLOGICAL_CONTRACT_ABI,
+              providerEthers
+            )
+            const treasury = await contract.treasury()
+            setTreasuryWallet(treasury)
+          } else {
+            // fallback: usar eth_call
+            const data = '0x8a8c523c' // selector de treasury()
+            const result = await provider.request({
+              method: 'eth_call',
+              params: [
+                { to: MASTER_ECOLOGICAL_CONTRACT_ADDRESS, data },
+                'latest'
+              ]
+            })
+            // Aquí podrías decodificar el resultado si lo necesitas
+            setTreasuryWallet(result);
+          }
+        } catch (err) {
+          setTreasuryWallet('');
+        }
+      };
+      getTreasury();
+    }
+  }, []);
+  // ...existing code...
+  // Main render block
   return (
-    <div className="text-center">
-      <h3 className="text-2xl font-bold text-forest mb-6 animate-wind-sway">
-        🌿 EcoWallet Connector
-      </h3>
-      
+    <div className="eco-wallet-connector p-6 max-w-2xl mx-auto">
       {!isConnected ? (
         <div className="animate-leaf-grow">
           <p className="text-nature-light mb-6">
-            Conecta tu wallet para acceder al ecosistema GreenLedger
+            <span className="text-4xl mr-2">🌱</span>
+            Conecta tu wallet para acceder al ecosistema <span className="font-bold text-leaf">GreenLedger</span>
           </p>
-          
           <button
             onClick={connectWallet}
             disabled={isConnecting}
-            className="eco-btn"
+            className="eco-btn bg-gradient-to-r from-green-400 via-green-600 to-green-400 text-white shadow-lg hover:scale-105 transition-transform"
           >
             {isConnecting ? (
               <div className="flex items-center gap-2">
-                <div className="animate-spin h-4 w-4 border-2 border-forest border-t-transparent rounded-full"></div>
-                <span>🌱 Conectando...</span>
+                <div className="animate-spin h-8 w-8 border-4 border-forest border-t-transparent rounded-full"></div>
+                <span className="text-lg">🌱 Conectando...</span>
               </div>
             ) : (
-              <>🦊 Conectar MetaMask</>
+              <><span className="text-2xl">🦊</span> <span className="ml-2">Conectar MetaMask</span></>
             )}
           </button>
-          
-          <div className="mt-4 p-4 bg-nature rounded-lg border border-spring-green">
+          {isConnecting && (
+            <div className="mt-4 text-leaf animate-pulse-green">
+              <span>Esperando confirmación de MetaMask...</span>
+            </div>
+          )}
+          <div className="mt-4 p-4 bg-nature rounded-lg border-2 border-spring-green shadow-md">
             <p className="text-sm text-nature-light">
-              💡 <strong>Tip Ecológico:</strong> Con tu wallet conectada podrás recibir recompensas PYUSD por tus acciones sostenibles
+              💡 <strong>Tip Ecológico:</strong> Con tu wallet conectada podrás recibir <span className="text-leaf font-bold">recompensas PYUSD</span> por tus acciones sostenibles
             </p>
           </div>
         </div>
       ) : (
-        <div className="animate-leaf-grow">
+        <div className="animate-fade-in">
           <div className="mb-6">
             <div className="flex items-center justify-center gap-2 mb-4">
-              <span className="text-2xl animate-pulse-green">🌟</span>
-              <span className="font-semibold text-forest">EcoWallet Conectada</span>
+              <span className="text-4xl animate-bounce">🌱</span>
+              <span className="font-semibold text-forest text-xl">¡EcoWallet Conectada!</span>
+              <span className="text-2xl animate-pulse-green">🟢</span>
             </div>
-            
-            <div className="p-4 bg-gradient-forest rounded-lg border border-leaf">
+            <div className="p-4 bg-gradient-to-r from-green-200 via-green-100 to-green-200 rounded-lg border-2 border-leaf shadow-xl animate-slide-in">
               <div className="text-sm text-nature-light mb-1">Dirección Verde:</div>
-              <div className="font-mono text-xs text-forest bg-nature p-2 rounded border">
+              <div className="font-mono text-xs text-forest bg-nature p-2 rounded border-2 border-leaf">
                 {walletAddress}
               </div>
             </div>
           </div>
-
-          <div className="mb-6">
-            <div className="eco-grid eco-grid-3">
-              <div className="text-center p-3">
-                <div className="text-2xl mb-2">⚡</div>
-                <div className="font-semibold text-leaf">ETH</div>
-                <div className="text-forest">
-                  {isLoadingBalances ? (
-                    <div className="animate-spin h-4 w-4 border-2 border-forest border-t-transparent rounded-full mx-auto"></div>
-                  ) : (
-                    balances.eth
-                  )}
-                </div>
-              </div>
-              <div className="text-center p-3">
-                <div className="text-2xl mb-2">💚</div>
-                <div className="font-semibold text-leaf">PYUSD</div>
-                <div className="text-forest">
-                  {isLoadingBalances ? (
-                    <div className="animate-spin h-4 w-4 border-2 border-forest border-t-transparent rounded-full mx-auto"></div>
-                  ) : (
-                    balances.pyusd
-                  )}
-                </div>
-              </div>
-              <div className="text-center p-3">
-                <div className="text-2xl mb-2">🏆</div>
-                <div className="font-semibold text-leaf">Ranking</div>
-                <div className="text-forest">#12</div>
+          {/* Balances grid */}
+          <div className="eco-grid eco-grid-3 mb-6">
+            <div className="text-center p-3">
+              <div className="text-3xl mb-2">⚡</div>
+              <div className="font-semibold text-leaf">ETH</div>
+              <div className="text-forest">
+                {isLoadingBalances ? (
+                  <div className="animate-spin h-8 w-8 border-4 border-forest border-t-transparent rounded-full mx-auto"></div>
+                ) : loadingTimeout ? (
+                  <div className="text-xs text-red-600 animate-pulse">⏳ La red está lenta, intenta recargar o cambiar de RPC.</div>
+                ) : (
+                  <span className="text-xl font-bold text-green-700">{balances.eth}</span>
+                )}
               </div>
             </div>
-            {/* Lista de tokens */}
-            <div className="mt-4 bg-nature/30 rounded-lg p-4">
-              <div className="font-semibold text-nature-light mb-2">Tus Criptomonedas:</div>
-              <ul className="grid grid-cols-2 md:grid-cols-4 gap-2">
-                <li className="text-forest font-bold">ETH: {balances.eth}</li>
-                {tokenBalances.map(token => (
-                  <li key={token.symbol} className="text-forest">
-                    {token.symbol}: <span className="font-bold">{token.balance}</span>
-                  </li>
-                ))}
-              </ul>
+            <div className="text-center p-3">
+              <div className="text-3xl mb-2">💚</div>
+              <div className="font-semibold text-leaf">PYUSD</div>
+              <div className="text-forest">
+                {isLoadingBalances ? (
+                  <div className="animate-spin h-8 w-8 border-4 border-forest border-t-transparent rounded-full mx-auto"></div>
+                ) : loadingTimeout ? (
+                  <div className="text-xs text-red-600 animate-pulse">⏳ La red está lenta, intenta recargar o cambiar de RPC.</div>
+                ) : (
+                  <span className="text-xl font-bold text-green-700">{balances.pyusd}</span>
+                )}
+              </div>
+            </div>
+            <div className="text-center p-3">
+              <div className="text-3xl mb-2">🪙</div>
+              <div className="font-semibold text-leaf">Tokens</div>
+              <div className="text-forest">
+                {isLoadingBalances ? (
+                  <div className="animate-spin h-8 w-8 border-4 border-forest border-t-transparent rounded-full mx-auto"></div>
+                ) : loadingTimeout ? (
+                  <div className="text-xs text-red-600 animate-pulse">⏳ La red está lenta, intenta recargar o cambiar de RPC.</div>
+                ) : (
+                  tokenBalances.map(t => (
+                    <div key={t.symbol} className="text-green-800 font-bold">{t.symbol}: {t.balance}</div>
+                  ))
+                )}
+              </div>
             </div>
           </div>
-
-          <div className="flex gap-3 justify-center mt-4">
-            <button 
-              onClick={() => fetchBalances(walletAddress)}
-              disabled={isLoadingBalances}
-              className="eco-btn eco-btn-secondary"
-            >
-              {isLoadingBalances ? '🔄 Actualizando...' : '💰 Actualizar Saldos'}
-            </button>
-            <button 
-              onClick={() => setShowComparison(!showComparison)}
-              className="eco-btn eco-btn-secondary"
-            >
-              📊 {showComparison ? 'Ocultar' : 'Ver'} Historial
-            </button>
-            <button className="eco-btn eco-btn-secondary">
-              🌍 Ver Transacciones
-            </button>
-            <button 
-              onClick={() => alert('Funcionalidad de compra simulada. Integra contrato para compra real.')}
-              className="eco-btn bg-gradient-to-r from-green-500 to-green-700 text-white font-bold border-2 border-green-600 shadow hover:scale-105 transition-all"
-              style={{ minWidth: 160 }}
-            >
-              🛒 Comprar PYUSD
-            </button>
-            <button 
-              onClick={disconnectWallet}
-              className="eco-btn bg-gradient-to-r from-red-500 to-orange-400 text-white font-bold border-2 border-red-600 shadow-lg hover:scale-105 transition-all"
-              style={{ minWidth: 160 }}
-            >
-              🔌 Desconectar
-            </button>
+          {/* Historial de balances */}
+          <div className="eco-panel bg-nature border-2 border-leaf rounded-lg p-4 animate-fade-in shadow-md mb-6">
+            <div className="font-semibold text-forest mb-2">Historial de Balances</div>
+            <ul className="text-xs text-nature-light">
+              {balanceHistory.map((entry, idx) => (
+                <li key={idx} className="mb-1">
+                  <span className="font-mono">{entry.timestamp.slice(11,19)}</span> | ETH: <span className="font-bold text-leaf">{entry.eth}</span> | PYUSD: <span className="font-bold text-leaf">{entry.pyusd}</span>
+                </li>
+              ))}
+            </ul>
           </div>
-
-          {/* Sección de comparación de saldos */}
-          {showComparison && balanceHistory.length > 0 && (
-            <div className="mt-6 eco-card">
-              <h4 className="text-lg font-semibold text-white mb-4">📈 Historial de Saldos</h4>
-              <div className="space-y-2">
-                {balanceHistory.slice(0, 3).map((entry, index) => {
-                  const isLatest = index === 0
-                  const previous = balanceHistory[index + 1]
-                  const ethChange = previous ? (parseFloat(entry.eth) - parseFloat(previous.eth)).toFixed(4) : 0
-                  const pyusdChange = previous ? (parseFloat(entry.pyusd) - parseFloat(previous.pyusd)).toFixed(2) : 0
-                  
-                  return (
-                    <div key={entry.timestamp} className={`p-3 rounded-lg ${isLatest ? 'bg-spring-green/10 border border-spring-green' : 'bg-forest/20'}`}>
-                      <div className="flex justify-between items-center">
-                        <div className="text-sm text-nature-light">
-                          {new Date(entry.timestamp).toLocaleString('es-ES', {
-                            day: '2-digit',
-                            month: '2-digit',
-                            hour: '2-digit',
-                            minute: '2-digit'
-                          })}
-                          {isLatest && <span className="ml-2 text-spring-green font-semibold">• ACTUAL</span>}
-                        </div>
-                        <div className="flex gap-4 text-sm">
-                          <div className="text-center">
-                            <div className="text-white font-medium">{entry.eth} ETH</div>
-                            {previous && (
-                              <div className={`text-xs ${ethChange >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-                                {ethChange >= 0 ? '+' : ''}{ethChange}
-                              </div>
-                            )}
-                          </div>
-                          <div className="text-center">
-                            <div className="text-white font-medium">{entry.pyusd} PYUSD</div>
-                            {previous && (
-                              <div className={`text-xs ${pyusdChange >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-                                {pyusdChange >= 0 ? '+' : ''}{pyusdChange}
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  )
-                })}
-              </div>
-              
-              {balanceHistory.length > 1 && (
-                <div className="mt-4 p-3 bg-nature/10 rounded-lg">
-                  <div className="text-sm text-nature-light text-center">
-                    💡 Comparación con la transacción anterior:
-                    <div className="flex justify-center gap-6 mt-2">
-                      <span className="text-white">
-                        ETH: {((parseFloat(balanceHistory[0]?.eth || 0) - parseFloat(balanceHistory[1]?.eth || 0)) >= 0 ? '+' : '')}
-                        {(parseFloat(balanceHistory[0]?.eth || 0) - parseFloat(balanceHistory[1]?.eth || 0)).toFixed(4)}
-                      </span>
-                      <span className="text-white">
-                        PYUSD: {((parseFloat(balanceHistory[0]?.pyusd || 0) - parseFloat(balanceHistory[1]?.pyusd || 0)) >= 0 ? '+' : '')}
-                        {(parseFloat(balanceHistory[0]?.pyusd || 0) - parseFloat(balanceHistory[1]?.pyusd || 0)).toFixed(2)}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-              )}
-            </div>
-          )}
+          {/* Acciones rápidas */}
+          <div className="eco-panel bg-gradient-to-r from-green-300 via-green-100 to-green-300 border-2 border-leaf rounded-lg p-4 animate-slide-in shadow-lg mb-6">
+            <div className="font-semibold text-forest mb-2">Acciones Rápidas</div>
+            <button className="eco-btn mr-2 bg-green-600 text-white shadow-md hover:scale-105 transition-transform" onClick={handleBuyService}>Comprar Servicio Demo</button>
+            <button className="eco-btn bg-red-500 text-white shadow-md hover:scale-105 transition-transform" onClick={disconnectWallet}>Desconectar</button>
+            <div className="mt-2 text-xs text-nature-light">Wallet de comisiones: <span className="font-mono text-leaf">{treasuryWallet}</span></div>
+            <div className="mt-2 text-xs text-nature-light">Estado Tx: <span className="font-mono text-leaf">{txStatus}</span></div>
+          </div>
+          <div className="mt-4 p-4 bg-gradient-to-r from-green-200 via-green-100 to-green-200 rounded-lg border-2 border-spring-green animate-fade-in shadow-md">
+            <p className="text-lg text-nature-light">
+              🌱 <strong>¡Bienvenido al ecosistema GreenLedger!</strong> <span className="text-leaf">Explora tus recompensas, mintea NFTs y consulta tu score ambiental.</span>
+            </p>
+          </div>
         </div>
       )}
     </div>
-  )
+  );
 }
+

@@ -4,6 +4,7 @@ import ScoreDashboard from '../components/ScoreDashboard'
 import RewardsCard from '../components/RewardsCard'
 import LeaderBoard from '../components/LeaderBoard'
 import { useWeb3 } from '../hooks/useWeb3'
+import AdminRegisterSubcontract from '../components/AdminRegisterSubcontract'
 
 export default function DashboardPage() {
   const { isConnected, connectWallet } = useWeb3()
@@ -47,6 +48,9 @@ export default function DashboardPage() {
         <div className="mb-8">
           <WalletConnector />
         </div>
+
+        {/* Interfaz admin para registrar subcontratos */}
+        <AdminRegisterSubcontract />
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-12">
           <ScoreDashboard />
