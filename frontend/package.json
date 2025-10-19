@@ -1,21 +1,19 @@
 {
-  "name": "greenledgerprotocol-frontend",
-  "version": "0.1.0",
+  "name": "greenledger-frontend",
+  "version": "1.0.0",
   "private": true,
   "scripts": {
-    "dev": "next dev --turbopack",
-    "build": "next build --turbopack",
-    "start": "next start",
-    "lint": "eslint"
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start"
   },
   "dependencies": {
-    "@blockscout/app-sdk": "^0.1.2",
-    "@envio-dev/hypersync-client": "^0.6.6",
-    "@lighthouse-web3/sdk": "^0.4.3",
-    "ethers": "^6.15.0",
-    "next": "15.5.4",
-    "react": "19.1.0",
-    "react-dom": "19.1.0"
+    "chart.js": "^4.5.1",
+    "next": "^15.5.4",
+    "react": "^18.2.0",
+    "react-chartjs-2": "^5.3.0",
+    "react-dom": "^18.2.0",
+    "tailwindcss": "^3.4.18"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3.3.1",

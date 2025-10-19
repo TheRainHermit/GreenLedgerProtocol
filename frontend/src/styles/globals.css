@@ -1,0 +1,31 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* --- Personalización global --- */
+
+body {
+  font-family: 'Inter', system-ui, sans-serif;
+  /* Usa las clases Tailwind directamente en el JSX para bg y text */
+}
+
+/* Mejorar inputs y botones por defecto */
+input, button, select, textarea {
+  @apply outline-none;
+}
+
+/* Botones base */
+button {
+  @apply transition focus:ring-2 focus:ring-offset-2;
+}
+
+
+/* Scrollbar minimalista */
+::-webkit-scrollbar {
+  width: 8px;
+  background: #f3f4f6;
+}
+::-webkit-scrollbar-thumb {
+  background: #d1fae5;
+  border-radius: 4px;
+}
