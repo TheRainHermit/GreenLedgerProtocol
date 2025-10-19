@@ -1,15 +1,11 @@
 {
-<<<<<<< HEAD
   "type": "module",
   "devDependencies": {
     "@nomiclabs/hardhat-waffle": "^2.0.3",
     "hardhat": "^2.19.4"
   },
   "dependencies": {
-    "@openzeppelin/contracts": "^5.4.0"
-=======
-  "dependencies": {
+    "@openzeppelin/contracts": "^5.4.0",
     "ethers": "^6.15.0"
->>>>>>> 6a4d04255f6ab6e68bda7d8ecacc878d4135a9f1
   }
 }
